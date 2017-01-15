@@ -98,6 +98,8 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
     return {
         id: "com-chilipeppr-widget-xyz",
         url: "(auto fill by runme.js)",
+        testurl: "(auto fill by runme.js)",
+        githuburl: "(auto fill by runme.js)",
         fiddleurl: "(auto fill by runme.js)",
         name: "Widget / XYZ Axes",
         desc: "This widget shows your XYZ position. It can also show your A position. You have jog controls and axis zeroing and homing.",
