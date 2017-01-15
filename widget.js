@@ -260,6 +260,9 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             if(this.grblVersion.substring(0,1) == '1') return true;
             return false;
         },
+        isGrbl: function(){
+            return this.grblVersion.length > 0;
+        },
         pencilSetup: function() {
             // add mouseover events to DRO numbers
             //$('#com-chilipeppr-widget-xyz-x').mouseover(this.pencilOnMouseover.bind(this));
@@ -1441,6 +1444,9 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
                 cmd += evt.data.toUpperCase() + "0";
             }
             cmd += "\n";
+            if(this.isGrbl()){
+                cmd = "$H\n"
+            }
             console.log(cmd);
             //chilipeppr.publish("/com-chilipeppr-widget-serialport/send", cmd);
             this.publishSend(cmd);
