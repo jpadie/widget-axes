@@ -1,5 +1,5 @@
 // Test this element. This code is auto-removed by the chilipeppr.load()
-/* global $ cprequire_test cpdefine cprequire chilipeppr */
+/* global $ chilipeppr cprequire_test cprequire cpdefine */
 cprequire_test(["inline:com-chilipeppr-widget-xyz"], function (xyz) {
     console.log("test running of " + xyz.id);
     //sp.init("192.168.1.7");
@@ -63,34 +63,6 @@ cprequire_test(["inline:com-chilipeppr-widget-xyz"], function (xyz) {
     //testAxesValUpdates();
     testUnitsChange();
     
-    /*
-    setTimeout(function() {
-        
-        console.log("setting up alternate keystrokes");
-        $('#com-chilipeppr-widget-xyz-ftr').keydown(function(evt) {
-            var e = $.Event('keydown');
-            
-            if (evt.which == 50) {
-                // the #2 key
-                // mimic down arrow being pressed
-                e.which= 40;
-            } else if (evt.which == 56) {
-                // the #8 key
-                // mimic up arrow being pressed
-                e.which= 38; // enter
-            }
-            
-            console.log("artificial event:", e);
-            if (e.which > 0) {
-                evt.preventDefault();
-                // fire off fake event as if key was pressed down
-                $('#com-chilipeppr-widget-xyz-ftr').trigger(e);
-                return false;
-            }
-        });
-        
-    }, 5000);
-    */
 
 } /*end_test*/ );
 
@@ -113,22 +85,20 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             "/com-chilipeppr-interface-cnccontroller/units" : "Deprecated. Not listening to this anymore. We want to know if the units changed for inch/mm.",
             "/com-chilipeppr-interface-cnccontroller/plannerpause" : "We need to know when to pause sending jog cmds.",
             "/com-chilipeppr-interface-cnccontroller/plannerresume" : "We need to know when to resume jog cmds.",
-            '/com-chilipeppr-widget-3dviewer/unitsChanged' : "Listenting to see if the 3D Viewer is telling us that the user Gcode is in a specific coordinate and then just assuming we will only be sent axes coordinate updates in that unit. Not using /com-chilipeppr-interface-cnccontroller/units anymore.",
-            "/com-chilipeppr-interface-cnccontroller/grblVersion" : "We need to know whether we are using grbl"
-            
+            '/com-chilipeppr-widget-3dviewer/unitsChanged' : "Listenting to see if the 3D Viewer is telling us that the user Gcode is in a specific coordinate and then just assuming we will only be sent axes coordinate updates in that unit. Not using /com-chilipeppr-interface-cnccontroller/units anymore."
         },
-        grblVersion: '',
         isGrbl: function(){
             return this.grblVersion.length > 0;
         },
         isGrblV1: function(){
-          if(this.grblVersion.length == 0) return false;
-          if(this.grblVersion.substring(0,1) =='1') return true;
-          return false;
+            if(this.grblVersion.length == 0) return false;
+            if(this.grblVersion.substring(0,1) == '1') return true;
+            return false;
         },
         setGrblVersion: function(version){
             this.grblVersion = version;
         },
+        grblVersion:'',
         init: function () {
 
             // Do UI setup
@@ -157,7 +127,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             // and abstract away the specific hardware details from us so this widget is reusable
             chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/plannerpause", this, this.onPlannerPause);
             chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/plannerresume", this, this.onPlannerResume);
-
             chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/grblVersion", this, this.setGrblVersion);
             // setup onconnect pubsub event
             /*
@@ -1117,7 +1086,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             } else {
                 cmd += evt.data.toUpperCase() + "0";
             }
-            
             if(this.isGrbl()){
                 cmd = "$H";
             }
@@ -1287,7 +1255,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
                 $('#com-chilipeppr-widget-xyz').addClass("panel-primary");
                 $('#com-chilipeppr-widget-xyz-ftr').addClass("panel-primary");
                 isjogging = true;
-                that.accelBaseValHilite({});
                 console.log("got focusin on axes widget ftr");
             });
             $('#com-chilipeppr-widget-xyz-ftr').focusout(function () {
@@ -1296,7 +1263,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
                 $('#com-chilipeppr-widget-xyz').removeClass("panel-primary");
                 $('#com-chilipeppr-widget-xyz-ftr').removeClass("panel-primary");
                 isjogging = false;
-                that.accelBaseValHilite({});
                 console.log("got focusout on axes widget ftr");
             });
             /*$('#com-chilipeppr-widget-xyz-ftr').keypress(function (evt) {
@@ -1329,7 +1295,7 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
                     //console.log("exiting cuz not arrow key. evt:", evt);
                     return;
                 } else {
-                    console.log("evt:", evt);
+                    //console.log("evt:", evt);
                 }
 
                 //if (evt.which != 16 && evt.which != 17 && evt.which != 18) console.log("got keydown for jog. evt:", evt, evt.which);
@@ -1443,7 +1409,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
         jogBtn: function (evt) {
             //console.log("jogBtn:", arguments);
             var direction = evt.data;
-            this.accelBaseValHilite(evt);
             /*
             var isFast, is100xFast, is1000xFast, is10000xFast = false;
             //var isSuperFast = false;
