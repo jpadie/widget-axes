@@ -173,6 +173,7 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
         desc: "The Axes widget shows the XYZA values of the axes of your CNC controller. It also enables you to jog, home, change units, and change Work Coordinate Systems.",
         publish: {},
         subscribe: {},
+        grblVersion: '',
         foreignPublish: {
             '/com-chilipeppr-widget-serialport/send': "We publish to the serial port Gcode jog commands"
         },
@@ -182,7 +183,8 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
                 "/com-chilipeppr-interface-cnccontroller/plannerpause": "We need to know when to pause sending jog cmds.",
                 "/com-chilipeppr-interface-cnccontroller/plannerresume": "We need to know when to resume jog cmds.",
                 "/com-chilipeppr-interface-cnccontroller/units": "Deprecated. Not listening to this anymore. See next.",
-                '/com-chilipeppr-widget-3dviewer/unitsChanged': "Listenting to see if the 3D Viewer is telling us that the user Gcode is in a specific coordinate and then just assuming we will only be sent axes coordinate updates in that unit. Not using /com-chilipeppr-interface-cnccontroller/units anymore."
+                '/com-chilipeppr-widget-3dviewer/unitsChanged': "Listenting to see if the 3D Viewer is telling us that the user Gcode is in a specific coordinate and then just assuming we will only be sent axes coordinate updates in that unit. Not using /com-chilipeppr-interface-cnccontroller/units anymore.",
+                "/com-chilipeppr-interface-cnccontroller/grblVersion": "listen for the grbl version to determine how to jog"
         },
         init: function () {
 
@@ -219,7 +221,7 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             // subscribe to the CNC controller broadcasting what
             // layer system we're in
             chilipeppr.subscribe('/com-chilipeppr-interface-cnccontroller/coords', this.onCoordsUpdate.bind(this));
-
+            chilipeppr.subscribe('/com-chilipeppr-interface-cnccontroller/grblVersion', this, this.setGrblVersion);
             // setup onconnect pubsub event
             /*
             chilipeppr.subscribe("/com-chilipeppr-widget-serialport/ws/onconnect", this, function (msg) {
@@ -249,6 +251,14 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             this.setupShowHideWcsBtn();
             var that = this;
             console.log(this.name + " done loading.");
+        },
+        setGrblVersion: function(version){
+            this.grblVersion = version;
+        },
+        isGrblVersion1: function(){
+            if(this.grblVersion.length < 1) return false;
+            if(this.grblVersion.substring(0,1) == '1') return true;
+            return false;
         },
         pencilSetup: function() {
             // add mouseover events to DRO numbers
@@ -1939,7 +1949,11 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
 
             if (xyz.length > 0) {
                 //cmd += xyz + val + " F" + feedrate + "\nG90\n";
-                cmd += xyz + val + "\nG90\n";
+                if(this.isGrblVersion1()){
+                    cmd = '$J=' + xyz + val + "\n";
+                } else {
+                    cmd += xyz + val + "\nG90\n";
+                }
                 // do last minute check to see if planner buffer is too full, if so ignore this cmd
                 if (!(this.isPausedByPlanner)) {
                     //chilipeppr.publish("/com-chilipeppr-widget-serialport/send", cmd);
