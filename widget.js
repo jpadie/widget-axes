@@ -1,5 +1,5 @@
 // Test this element. This code is auto-removed by the chilipeppr.load()
-/* global $, chilipeppr, cprequire, cprequire_test, cpdefine, */
+/* global $ cprequire_test cpdefine cprequire chilipeppr */
 cprequire_test(["inline:com-chilipeppr-widget-xyz"], function (xyz) {
     console.log("test running of " + xyz.id);
     //sp.init("192.168.1.7");
@@ -97,16 +97,14 @@ cprequire_test(["inline:com-chilipeppr-widget-xyz"], function (xyz) {
 cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"], function () {
     return {
         id: "com-chilipeppr-widget-xyz",
-        url: "(auto fill by runme.js)",
-        testurl: "(auto fill by runme.js)",
-        githuburl: "(auto fill by runme.js)",
+        url: "(auto fill by runme.js)", // The final URL of the working widget as a single HTML file with CSS and Javascript inlined. You can let runme.js auto fill this if you are using Cloud9.
+        githuburl: "(auto fill by runme.js)", // The backing github repo
+        testurl: "(auto fill by runme.js)", // The standalone working widget so can view it working by itself
         fiddleurl: "(auto fill by runme.js)",
         name: "Widget / XYZ Axes",
         desc: "This widget shows your XYZ position. It can also show your A position. You have jog controls and axis zeroing and homing.",
         publish: {},
-        subscribe: {
-            
-        },
+        subscribe: {},
         foreignPublish: {
             '/com-chilipeppr-widget-serialport/send' : "We publish to the serial port Gcode jog commands"            
         },
@@ -116,8 +114,20 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             "/com-chilipeppr-interface-cnccontroller/plannerpause" : "We need to know when to pause sending jog cmds.",
             "/com-chilipeppr-interface-cnccontroller/plannerresume" : "We need to know when to resume jog cmds.",
             '/com-chilipeppr-widget-3dviewer/unitsChanged' : "Listenting to see if the 3D Viewer is telling us that the user Gcode is in a specific coordinate and then just assuming we will only be sent axes coordinate updates in that unit. Not using /com-chilipeppr-interface-cnccontroller/units anymore.",
-            "/com-chilipeppr-interface-cnccontroller/grblVersion" : "gets the version if we are using grbl"
+            "/com-chilipeppr-interface-cnccontroller/grblVersion" : "We need to know whether we are using grbl"
             
+        },
+        grblVersion: '',
+        isGrbl: function(){
+            return this.grblVersion.length > 0;
+        },
+        isGrblV1: function(){
+          if(this.grblVersion.length == 0) return false;
+          if(this.grblVersion.substring(0,1) =='1') return true;
+          return false;
+        },
+        setGrblVersion: function(version){
+            this.grblVersion = version;
         },
         init: function () {
 
@@ -147,9 +157,8 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             // and abstract away the specific hardware details from us so this widget is reusable
             chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/plannerpause", this, this.onPlannerPause);
             chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/plannerresume", this, this.onPlannerResume);
-            chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/grblVersion", this, this.setGrblVersion);
-            
 
+            chilipeppr.subscribe("/com-chilipeppr-interface-cnccontroller/grblVersion", this, this.setGrblVersion);
             // setup onconnect pubsub event
             /*
             chilipeppr.subscribe("/com-chilipeppr-widget-serialport/ws/onconnect", this, function (msg) {
@@ -179,17 +188,6 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             this.setupShowHideWcsBtn();
             var that = this;
             console.log(this.name + " done loading.");
-        },
-        setGrblVersion: function(version){
-            this.grblVersion = version;  
-        },
-        isGrbl: function(){
-            return this.grblVersion.length > 0;
-        },
-        isGrblV1: function(){
-            if(this.grblVersion.length == 0) return false;
-            if(this.grblVersion.substring(0,1) == '1') return true;
-            return false;
         },
         initAs3dPrinting: function() {
             // by default we'll show the A/B/C axes
@@ -1119,8 +1117,9 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
             } else {
                 cmd += evt.data.toUpperCase() + "0";
             }
+            
             if(this.isGrbl()){
-                cmd = '$H';
+                cmd = "$H";
             }
             cmd += "\n";
             console.log(cmd);
@@ -1586,10 +1585,9 @@ cpdefine("inline:com-chilipeppr-widget-xyz", ["chilipeppr_ready", "jquerycookie"
 
             if (xyz.length > 0) {
                 //cmd += xyz + val + " F" + feedrate + "\nG90\n";
+                cmd += xyz + val + "\nG90\n";
                 if(this.isGrblV1()){
-                    cmd = '$J=' + xyz + val + "\n";
-                } else {
-                    cmd += xyz + val + "\nG90\n";
+                    cmd = '$J' + xyz + val + "\n";
                 }
                 // do last minute check to see if planner buffer is too full, if so ignore this cmd
                 if (!(this.isPausedByPlanner))
